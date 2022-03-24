@@ -1,0 +1,667 @@
+<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8"/><title>从 SIR 模型到基于智能体的模拟 —— 新冠肺炎的传播演化可视化</title><style>
+/* cspell:disable-file */
+/* webkit printing magic: print all background colors */
+html {
+	-webkit-print-color-adjust: exact;
+}
+* {
+	box-sizing: border-box;
+	-webkit-print-color-adjust: exact;
+}
+
+html,
+body {
+	margin: 0;
+	padding: 0;
+}
+@media only screen {
+	body {
+		margin: 2em auto;
+		max-width: 900px;
+		color: rgb(55, 53, 47);
+	}
+}
+
+body {
+	line-height: 1.5;
+	white-space: pre-wrap;
+}
+
+a,
+a.visited {
+	color: inherit;
+	text-decoration: underline;
+}
+
+.pdf-relative-link-path {
+	font-size: 80%;
+	color: #444;
+}
+
+h1,
+h2,
+h3 {
+	letter-spacing: -0.01em;
+	line-height: 1.2;
+	font-weight: 600;
+	margin-bottom: 0;
+}
+
+.page-title {
+	font-size: 2.5rem;
+	font-weight: 700;
+	margin-top: 0;
+	margin-bottom: 0.75em;
+}
+
+h1 {
+	font-size: 1.875rem;
+	margin-top: 1.875rem;
+}
+
+h2 {
+	font-size: 1.5rem;
+	margin-top: 1.5rem;
+}
+
+h3 {
+	font-size: 1.25rem;
+	margin-top: 1.25rem;
+}
+
+.source {
+	border: 1px solid #ddd;
+	border-radius: 3px;
+	padding: 1.5em;
+	word-break: break-all;
+}
+
+.callout {
+	border-radius: 3px;
+	padding: 1rem;
+}
+
+figure {
+	margin: 1.25em 0;
+	page-break-inside: avoid;
+}
+
+figcaption {
+	opacity: 0.5;
+	font-size: 85%;
+	margin-top: 0.5em;
+}
+
+mark {
+	background-color: transparent;
+}
+
+.indented {
+	padding-left: 1.5em;
+}
+
+hr {
+	background: transparent;
+	display: block;
+	width: 100%;
+	height: 1px;
+	visibility: visible;
+	border: none;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.09);
+}
+
+img {
+	max-width: 100%;
+}
+
+@media only print {
+	img {
+		max-height: 100vh;
+		object-fit: contain;
+	}
+}
+
+@page {
+	margin: 1in;
+}
+
+.collection-content {
+	font-size: 0.875rem;
+}
+
+.column-list {
+	display: flex;
+	justify-content: space-between;
+}
+
+.column {
+	padding: 0 1em;
+}
+
+.column:first-child {
+	padding-left: 0;
+}
+
+.column:last-child {
+	padding-right: 0;
+}
+
+.table_of_contents-item {
+	display: block;
+	font-size: 0.875rem;
+	line-height: 1.3;
+	padding: 0.125rem;
+}
+
+.table_of_contents-indent-1 {
+	margin-left: 1.5rem;
+}
+
+.table_of_contents-indent-2 {
+	margin-left: 3rem;
+}
+
+.table_of_contents-indent-3 {
+	margin-left: 4.5rem;
+}
+
+.table_of_contents-link {
+	text-decoration: none;
+	opacity: 0.7;
+	border-bottom: 1px solid rgba(55, 53, 47, 0.18);
+}
+
+table,
+th,
+td {
+	border: 1px solid rgba(55, 53, 47, 0.09);
+	border-collapse: collapse;
+}
+
+table {
+	border-left: none;
+	border-right: none;
+}
+
+th,
+td {
+	font-weight: normal;
+	padding: 0.25em 0.5em;
+	line-height: 1.5;
+	min-height: 1.5em;
+	text-align: left;
+}
+
+th {
+	color: rgba(55, 53, 47, 0.6);
+}
+
+ol,
+ul {
+	margin: 0;
+	margin-block-start: 0.6em;
+	margin-block-end: 0.6em;
+}
+
+li > ol:first-child,
+li > ul:first-child {
+	margin-block-start: 0.6em;
+}
+
+ul > li {
+	list-style: disc;
+}
+
+ul.to-do-list {
+	text-indent: -1.7em;
+}
+
+ul.to-do-list > li {
+	list-style: none;
+}
+
+.to-do-children-checked {
+	text-decoration: line-through;
+	opacity: 0.375;
+}
+
+ul.toggle > li {
+	list-style: none;
+}
+
+ul {
+	padding-inline-start: 1.7em;
+}
+
+ul > li {
+	padding-left: 0.1em;
+}
+
+ol {
+	padding-inline-start: 1.6em;
+}
+
+ol > li {
+	padding-left: 0.2em;
+}
+
+.mono ol {
+	padding-inline-start: 2em;
+}
+
+.mono ol > li {
+	text-indent: -0.4em;
+}
+
+.toggle {
+	padding-inline-start: 0em;
+	list-style-type: none;
+}
+
+/* Indent toggle children */
+.toggle > li > details {
+	padding-left: 1.7em;
+}
+
+.toggle > li > details > summary {
+	margin-left: -1.1em;
+}
+
+.selected-value {
+	display: inline-block;
+	padding: 0 0.5em;
+	background: rgba(206, 205, 202, 0.5);
+	border-radius: 3px;
+	margin-right: 0.5em;
+	margin-top: 0.3em;
+	margin-bottom: 0.3em;
+	white-space: nowrap;
+}
+
+.collection-title {
+	display: inline-block;
+	margin-right: 1em;
+}
+
+.simple-table {
+	margin-top: 1em;
+	font-size: 0.875rem;
+}
+
+.simple-table-header {
+	background: rgb(247, 246, 243);
+	color: black;
+	font-weight: 500;
+}
+
+time {
+	opacity: 0.5;
+}
+
+.icon {
+	display: inline-block;
+	max-width: 1.2em;
+	max-height: 1.2em;
+	text-decoration: none;
+	vertical-align: text-bottom;
+	margin-right: 0.5em;
+}
+
+img.icon {
+	border-radius: 3px;
+}
+
+.user-icon {
+	width: 1.5em;
+	height: 1.5em;
+	border-radius: 100%;
+	margin-right: 0.5rem;
+}
+
+.user-icon-inner {
+	font-size: 0.8em;
+}
+
+.text-icon {
+	border: 1px solid #000;
+	text-align: center;
+}
+
+.page-cover-image {
+	display: block;
+	object-fit: cover;
+	width: 100%;
+	max-height: 30vh;
+}
+
+.page-header-icon {
+	font-size: 3rem;
+	margin-bottom: 1rem;
+}
+
+.page-header-icon-with-cover {
+	margin-top: -0.72em;
+	margin-left: 0.07em;
+}
+
+.page-header-icon img {
+	border-radius: 3px;
+}
+
+.link-to-page {
+	margin: 1em 0;
+	padding: 0;
+	border: none;
+	font-weight: 500;
+}
+
+p > .user {
+	opacity: 0.5;
+}
+
+td > .user,
+td > time {
+	white-space: nowrap;
+}
+
+input[type="checkbox"] {
+	transform: scale(1.5);
+	margin-right: 0.6em;
+	vertical-align: middle;
+}
+
+p {
+	margin-top: 0.5em;
+	margin-bottom: 0.5em;
+}
+
+.image {
+	border: none;
+	margin: 1.5em 0;
+	padding: 0;
+	border-radius: 0;
+	text-align: center;
+}
+
+.code,
+code {
+	background: rgba(135, 131, 120, 0.15);
+	border-radius: 3px;
+	padding: 0.2em 0.4em;
+	border-radius: 3px;
+	font-size: 85%;
+	tab-size: 2;
+}
+
+code {
+	color: #eb5757;
+}
+
+.code {
+	padding: 1.5em 1em;
+}
+
+.code-wrap {
+	white-space: pre-wrap;
+	word-break: break-all;
+}
+
+.code > code {
+	background: none;
+	padding: 0;
+	font-size: 100%;
+	color: inherit;
+}
+
+blockquote {
+	font-size: 1.25em;
+	margin: 1em 0;
+	padding-left: 1em;
+	border-left: 3px solid rgb(55, 53, 47);
+}
+
+.bookmark {
+	text-decoration: none;
+	max-height: 8em;
+	padding: 0;
+	display: flex;
+	width: 100%;
+	align-items: stretch;
+}
+
+.bookmark-title {
+	font-size: 0.85em;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	height: 1.75em;
+	white-space: nowrap;
+}
+
+.bookmark-text {
+	display: flex;
+	flex-direction: column;
+}
+
+.bookmark-info {
+	flex: 4 1 180px;
+	padding: 12px 14px 14px;
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+}
+
+.bookmark-image {
+	width: 33%;
+	flex: 1 1 180px;
+	display: block;
+	position: relative;
+	object-fit: cover;
+	border-radius: 1px;
+}
+
+.bookmark-description {
+	color: rgba(55, 53, 47, 0.6);
+	font-size: 0.75em;
+	overflow: hidden;
+	max-height: 4.5em;
+	word-break: break-word;
+}
+
+.bookmark-href {
+	font-size: 0.75em;
+	margin-top: 0.25em;
+}
+
+.sans { font-family: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol"; }
+.code { font-family: "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace; }
+.serif { font-family: Lyon-Text, Georgia, ui-serif, serif; }
+.mono { font-family: iawriter-mono, Nitti, Menlo, Courier, monospace; }
+.pdf .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK JP'; }
+.pdf:lang(zh-CN) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK SC'; }
+.pdf:lang(zh-TW) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK TC'; }
+.pdf:lang(ko-KR) .sans { font-family: Inter, ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, "Apple Color Emoji", Arial, sans-serif, "Segoe UI Emoji", "Segoe UI Symbol", 'Twemoji', 'Noto Color Emoji', 'Noto Sans CJK KR'; }
+.pdf .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .code { font-family: Source Code Pro, "SFMono-Regular", Menlo, Consolas, "PT Mono", "Liberation Mono", Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.pdf .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK JP'; }
+.pdf:lang(zh-CN) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK SC'; }
+.pdf:lang(zh-TW) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK TC'; }
+.pdf:lang(ko-KR) .serif { font-family: PT Serif, Lyon-Text, Georgia, ui-serif, serif, 'Twemoji', 'Noto Color Emoji', 'Noto Serif CJK KR'; }
+.pdf .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK JP'; }
+.pdf:lang(zh-CN) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK SC'; }
+.pdf:lang(zh-TW) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK TC'; }
+.pdf:lang(ko-KR) .mono { font-family: PT Mono, iawriter-mono, Nitti, Menlo, Courier, monospace, 'Twemoji', 'Noto Color Emoji', 'Noto Sans Mono CJK KR'; }
+.highlight-default {
+	color: rgba(55, 53, 47, 1);
+}
+.highlight-gray {
+	color: rgba(120, 119, 116, 1);
+	fill: rgba(120, 119, 116, 1);
+}
+.highlight-brown {
+	color: rgba(159, 107, 83, 1);
+	fill: rgba(159, 107, 83, 1);
+}
+.highlight-orange {
+	color: rgba(217, 115, 13, 1);
+	fill: rgba(217, 115, 13, 1);
+}
+.highlight-yellow {
+	color: rgba(203, 145, 47, 1);
+	fill: rgba(203, 145, 47, 1);
+}
+.highlight-teal {
+	color: rgba(68, 131, 97, 1);
+	fill: rgba(68, 131, 97, 1);
+}
+.highlight-blue {
+	color: rgba(51, 126, 169, 1);
+	fill: rgba(51, 126, 169, 1);
+}
+.highlight-purple {
+	color: rgba(144, 101, 176, 1);
+	fill: rgba(144, 101, 176, 1);
+}
+.highlight-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.highlight-red {
+	color: rgba(212, 76, 71, 1);
+	fill: rgba(212, 76, 71, 1);
+}
+.highlight-gray_background {
+	background: rgba(241, 241, 239, 1);
+}
+.highlight-brown_background {
+	background: rgba(244, 238, 238, 1);
+}
+.highlight-orange_background {
+	background: rgba(251, 236, 221, 1);
+}
+.highlight-yellow_background {
+	background: rgba(251, 243, 219, 1);
+}
+.highlight-teal_background {
+	background: rgba(237, 243, 236, 1);
+}
+.highlight-blue_background {
+	background: rgba(231, 243, 248, 1);
+}
+.highlight-purple_background {
+	background: rgba(244, 240, 247, 0.8);
+}
+.highlight-pink_background {
+	background: rgba(249, 238, 243, 0.8);
+}
+.highlight-red_background {
+	background: rgba(253, 235, 236, 1);
+}
+.block-color-default {
+	color: inherit;
+	fill: inherit;
+}
+.block-color-gray {
+	color: rgba(120, 119, 116, 1);
+	fill: rgba(120, 119, 116, 1);
+}
+.block-color-brown {
+	color: rgba(159, 107, 83, 1);
+	fill: rgba(159, 107, 83, 1);
+}
+.block-color-orange {
+	color: rgba(217, 115, 13, 1);
+	fill: rgba(217, 115, 13, 1);
+}
+.block-color-yellow {
+	color: rgba(203, 145, 47, 1);
+	fill: rgba(203, 145, 47, 1);
+}
+.block-color-teal {
+	color: rgba(68, 131, 97, 1);
+	fill: rgba(68, 131, 97, 1);
+}
+.block-color-blue {
+	color: rgba(51, 126, 169, 1);
+	fill: rgba(51, 126, 169, 1);
+}
+.block-color-purple {
+	color: rgba(144, 101, 176, 1);
+	fill: rgba(144, 101, 176, 1);
+}
+.block-color-pink {
+	color: rgba(193, 76, 138, 1);
+	fill: rgba(193, 76, 138, 1);
+}
+.block-color-red {
+	color: rgba(212, 76, 71, 1);
+	fill: rgba(212, 76, 71, 1);
+}
+.block-color-gray_background {
+	background: rgba(241, 241, 239, 1);
+}
+.block-color-brown_background {
+	background: rgba(244, 238, 238, 1);
+}
+.block-color-orange_background {
+	background: rgba(251, 236, 221, 1);
+}
+.block-color-yellow_background {
+	background: rgba(251, 243, 219, 1);
+}
+.block-color-teal_background {
+	background: rgba(237, 243, 236, 1);
+}
+.block-color-blue_background {
+	background: rgba(231, 243, 248, 1);
+}
+.block-color-purple_background {
+	background: rgba(244, 240, 247, 0.8);
+}
+.block-color-pink_background {
+	background: rgba(249, 238, 243, 0.8);
+}
+.block-color-red_background {
+	background: rgba(253, 235, 236, 1);
+}
+.select-value-color-pink { background-color: rgba(245, 224, 233, 1); }
+.select-value-color-purple { background-color: rgba(232, 222, 238, 1); }
+.select-value-color-green { background-color: rgba(219, 237, 219, 1); }
+.select-value-color-gray { background-color: rgba(227, 226, 224, 1); }
+.select-value-color-opaquegray { background-color: rgba(255, 255, 255, 0.0375); }
+.select-value-color-orange { background-color: rgba(250, 222, 201, 1); }
+.select-value-color-brown { background-color: rgba(238, 224, 218, 1); }
+.select-value-color-red { background-color: rgba(255, 226, 221, 1); }
+.select-value-color-yellow { background-color: rgba(253, 236, 200, 1); }
+.select-value-color-blue { background-color: rgba(211, 229, 239, 1); }
+
+.checkbox {
+	display: inline-flex;
+	vertical-align: text-bottom;
+	width: 16;
+	height: 16;
+	background-size: 16px;
+	margin-left: 2px;
+	margin-right: 5px;
+}
+
+.checkbox-on {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20width%3D%2216%22%20height%3D%2216%22%20fill%3D%22%2358A9D7%22%2F%3E%0A%3Cpath%20d%3D%22M6.71429%2012.2852L14%204.9995L12.7143%203.71436L6.71429%209.71378L3.28571%206.2831L2%207.57092L6.71429%2012.2852Z%22%20fill%3D%22white%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+
+.checkbox-off {
+	background-image: url("data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%2216%22%20height%3D%2216%22%20viewBox%3D%220%200%2016%2016%22%20fill%3D%22none%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%0A%3Crect%20x%3D%220.75%22%20y%3D%220.75%22%20width%3D%2214.5%22%20height%3D%2214.5%22%20fill%3D%22white%22%20stroke%3D%22%2336352F%22%20stroke-width%3D%221.5%22%2F%3E%0A%3C%2Fsvg%3E");
+}
+	
+</style></head><body><article id="65d2a633-6849-4539-a758-7e9ffe2235f1" class="page sans"><header><h1 class="page-title">从 SIR 模型到基于智能体的模拟 —— 新冠肺炎的传播演化可视化</h1></header><div class="page-body"><p id="ccd688bc-4cb7-446e-9572-98c0b8dda04f" class="">作者：<a href="https://hongyujiang.github.io/cv/">蒋宏宇，</a><a href="https://jigsaw.thoughtworks.net/consultants/32950">田赛君</a></p><p id="6551aec3-3458-4da2-9ee5-c1e9edd4c5c2" class="">关键词：Covid19, SIR, Agent-based Model, Pandemic Simulation, Mesa</p><figure id="a528bf5f-5a81-408d-82a6-88c6192d564a" class="image"><a href="%E4%BB%8E%20SIR%20%E6%A8%A1%E5%9E%8B%E5%88%B0%E5%9F%BA%20a528b/Untitled.png"><img style="width:1864px" src="%E4%BB%8E%20SIR%20%E6%A8%A1%E5%9E%8B%E5%88%B0%E5%9F%BA%20a528b/Untitled.png"/></a><figcaption>图 1. 全球新冠确诊病例分布图。图片来源: <a href="https://www.notion.so/SIR-65d2a63368494539a7587e9ffe2235f1">华盛顿邮报</a>；访问时间: 2021 年 3 月 23日</figcaption></figure><p id="9d3154b1-1269-4b13-b4ff-43410301a01f" class="">自 2019 年底首次发现新型冠状病毒以来到现在，已经有超过 500多万人在这场大灾难中死亡，并且有超过 25 亿的新冠病例被报告（<a href="https://coronavirus.jhu.edu/map.html">数据</a>来自约翰-霍普金斯大学）。由于最近新冠病毒的变种带着极强的传染力通过旅行者甚至快递包裹向国内发起进攻，导致国内多地疫情频发，隔离、核酸检测、快递停发、居家办公频频出现在微博热搜。我们的脑中不禁会想到，疫情是如何传播的？为何疫情的「拐点」经常被提及？为何疫情迟迟得不到控制？为何中国的防疫成果这么优秀？作为一个好奇宝宝，怎么能不细细的探索一番，因此笔者在 Beach 的闲暇时间做了一个新冠疫情的传播模拟 Demo，帮助大家一起理解疫情传播的演化。</p><h1 id="88c24b1e-b012-431c-a0b4-8706466cc562" class="">太长不看</h1><p id="b1233cfb-56f5-4e86-8db8-4616f1049e38" class="">受 SIR-F 模型启发，笔者使用 Mesa 开发了一个新冠疫情的传播模拟 Demo，左边栏用于调整模拟参数，右上角的网格将展示「人群」移动情况以及感染状态；右下角对不同人群的总数进行动态显示。</p><figure id="5d891229-7532-4601-b276-4b79f63ce7fc" class="image"><a href="%E4%BB%8E%20SIR%20%E6%A8%A1%E5%9E%8B%E5%88%B0%E5%9F%BA%20a528b/%E6%88%AA%E5%B1%8F2022-03-23_%E4%B8%8B%E5%8D%882.11.54.png"><img style="width:2936px" src="%E4%BB%8E%20SIR%20%E6%A8%A1%E5%9E%8B%E5%88%B0%E5%9F%BA%20a528b/%E6%88%AA%E5%B1%8F2022-03-23_%E4%B8%8B%E5%8D%882.11.54.png"/></a><figcaption>图 2. 新冠肺炎传播模拟 Demo</figcaption></figure><p id="b0829e31-89a8-4b16-8574-e9f9a4847efd" class="">[<a href="https://github.com/thoughtworks-ai-lab">Show me the code</a>]</p><p id="223790d4-d4a6-435e-9302-93b4bd623afd" class="">[<a href="http://47.108.210.141:8521/#">Show me the demo</a>]</p><figure class="block-color-gray_background callout" style="white-space:pre-wrap;display:flex" id="f353fa7c-cb1d-4944-afdb-dcb274ca8b4d"><div style="font-size:1.5em"><span class="icon">🗣</span></div><div style="width:100%">由于公式在邮件中不能正常的显示，全文请戳 👇👇👇</div></figure><p id="269c4a87-a94d-4c21-9764-013a02b90215" class="">[完整版]</p><figure id="745e1fb0-7f88-4e99-be4d-dfbe1d354d39" class="image"><a href="https://www.notion.so"><img src="https://www.notion.so"/></a></figure><h1 id="a85dd222-f607-4cad-ac48-f020f14b4523" class="">SIR 模型及其变体</h1><p id="fea1389e-c64a-4986-9aab-64b60263cdc5" class=""><a href="https://en.wikipedia.org/wiki/Compartmental_models_in_epidemiology#The_SIR_model">SIR</a> 模型是一个用来理解疾病爆发的简单数学模型，由 Kermack 与 McKendrick 在 1927 年研究流行于伦敦的黑死病的时候提出，本文将首先对 SIR 模型进行一些简要的解释。</p><ul id="961eb612-3894-4515-a360-1cd83d1d39fe" class="bulleted-list"><li style="list-style-type:disc"><style>@import url('https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.13.2/katex.min.css')</style><span data-token-index="0" contenteditable="false" class="notion-text-equation-token" style="user-select:all;-webkit-user-select:all;-moz-user-select:all"><span></span><span><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>S</mi></mrow><annotation encoding="application/x-tex">S</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.68333em;vertical-align:0em;"></span><span class="mord mathnormal" style="margin-right:0.05764em;">S</span></span></span></span></span><span>﻿</span></span>: Susceptible 易感者 (= 总人口数 - 确诊人数)</li></ul><ul id="8ca24497-b14e-4701-a93e-ceedeadea0ad" class="bulleted-list"><li style="list-style-type:disc"><style>@import url('https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.13.2/katex.min.css')</style><span data-token-index="0" contenteditable="false" class="notion-text-equation-token" style="user-select:all;-webkit-user-select:all;-moz-user-select:all"><span></span><span><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>I</mi></mrow><annotation encoding="application/x-tex">I</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.68333em;vertical-align:0em;"></span><span class="mord mathnormal" style="margin-right:0.07847em;">I</span></span></span></span></span><span>﻿</span></span>: Infected 感染者 (= 确诊人数 - 治愈人数)</li></ul><ul id="62c72874-88ff-4dc8-903b-f3e5ea25a2e4" class="bulleted-list"><li style="list-style-type:disc"><style>@import url('https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.13.2/katex.min.css')</style><span data-token-index="0" contenteditable="false" class="notion-text-equation-token" style="user-select:all;-webkit-user-select:all;-moz-user-select:all"><span></span><span><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>R</mi></mrow><annotation encoding="application/x-tex">R</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.68333em;vertical-align:0em;"></span><span class="mord mathnormal" style="margin-right:0.00773em;">R</span></span></span></span></span><span>﻿</span></span>: Recovered 治愈且有免疫力者 (= 治愈人数)</li></ul><p id="8d3edb9a-d600-45ae-90db-92e036669b55" class="">该模型可以简单表示为</p><figure id="2c4e346b-37e8-41c0-b599-993a437b30ef" class="equation"><style>@import url('https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.13.2/katex.min.css')</style><div class="equation-container"><span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mrow><mi>S</mi><mo><mover><mo><mo>→</mo></mo><mrow><mi>β</mi><mi>I</mi></mrow></mover></mo><mi>I</mi><mo><mover><mo><mo>→</mo></mo><mi>γ</mi></mover></mo><mi>R</mi></mrow><annotation encoding="application/x-tex">S\overset{\beta I}{\rightarrow} I \overset{\gamma}{\rightarrow} R</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1.200086em;vertical-align:0em;"></span><span class="mord mathnormal" style="margin-right:0.05764em;">S</span><span class="mspace" style="margin-right:0.2777777777777778em;"></span><span class="mrel"><span class="mop op-limits"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:1.200086em;"><span style="top:-3em;"><span class="pstrut" style="height:3em;"></span><span><span class="mop">→</span></span></span><span style="top:-3.613978em;margin-left:0em;"><span class="pstrut" style="height:3em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight" style="margin-right:0.05278em;">β</span><span class="mord mathnormal mtight" style="margin-right:0.07847em;">I</span></span></span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2777777777777778em;"></span></span><span class="base"><span class="strut" style="height:1.01537em;vertical-align:0em;"></span><span class="mord mathnormal" style="margin-right:0.07847em;">I</span><span class="mspace" style="margin-right:0.2777777777777778em;"></span><span class="mrel"><span class="mop op-limits"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:1.01537em;"><span style="top:-3em;"><span class="pstrut" style="height:3em;"></span><span><span class="mop">→</span></span></span><span style="top:-3.613978em;margin-left:0em;"><span class="pstrut" style="height:3em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight" style="margin-right:0.05556em;">γ</span></span></span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2777777777777778em;"></span></span><span class="base"><span class="strut" style="height:0.68333em;vertical-align:0em;"></span><span class="mord mathnormal" style="margin-right:0.00773em;">R</span></span></span></span></span></div></figure><figure class="block-color-gray_background callout" style="white-space:pre-wrap;display:flex" id="865b286e-72b3-4ccb-9ac0-522d65d9a8f1"><div style="font-size:1.5em"><span class="icon">💡</span></div><div style="width:100%">式中 <style>@import url('https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.13.2/katex.min.css')</style><span data-token-index="0" contenteditable="false" class="notion-text-equation-token" style="user-select:all;-webkit-user-select:all;-moz-user-select:all"><span></span><span><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>β</mi></mrow><annotation encoding="application/x-tex">\beta</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8888799999999999em;vertical-align:-0.19444em;"></span><span class="mord mathnormal" style="margin-right:0.05278em;">β</span></span></span></span></span><span>﻿</span></span> 表示有效接触比例 [1 / min]， <style>@import url('https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.13.2/katex.min.css')</style><span data-token-index="0" contenteditable="false" class="notion-text-equation-token" style="user-select:all;-webkit-user-select:all;-moz-user-select:all"><span></span><span><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>γ</mi></mrow><annotation encoding="application/x-tex">\gamma</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.625em;vertical-align:-0.19444em;"></span><span class="mord mathnormal" style="margin-right:0.05556em;">γ</span></span></span></span></span><span>﻿</span></span> 表示治愈比例 [1 / min]</div></figure><p id="35d2d69e-b475-4696-b830-04ac4204d008" class="">给出该模型的常微分方程：</p><figure id="e1dbf88e-77f2-4480-a329-a70f2f6f319f" class="equation"><style>@import url('https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.13.2/katex.min.css')</style><div class="equation-container"><span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mtable rowspacing="0.2500em" columnalign="right left" columnspacing="0em"><mtr><mtd><mstyle scriptlevel="0" displaystyle="true"><mfrac><mrow><mi mathvariant="normal">d</mi><mi>S</mi></mrow><mrow><mrow><mtext> </mtext><mi mathvariant="normal">d</mi></mrow><mi>T</mi></mrow></mfrac></mstyle></mtd><mtd><mstyle scriptlevel="0" displaystyle="true"><mrow><mrow></mrow><mo>=</mo><mo>−</mo><msup><mi>N</mi><mrow><mo>−</mo><mn>1</mn></mrow></msup><mi>β</mi><mi>S</mi><mi>I</mi></mrow></mstyle></mtd></mtr><mtr><mtd><mstyle scriptlevel="0" displaystyle="true"><mfrac><mrow><mi mathvariant="normal">d</mi><mi>I</mi></mrow><mrow><mrow><mtext> </mtext><mi mathvariant="normal">d</mi></mrow><mi>T</mi></mrow></mfrac></mstyle></mtd><mtd><mstyle scriptlevel="0" displaystyle="true"><mrow><mrow></mrow><mo>=</mo><msup><mi>N</mi><mrow><mo>−</mo><mn>1</mn></mrow></msup><mi>β</mi><mi>S</mi><mi>I</mi><mo>−</mo><mi>γ</mi><mi>I</mi></mrow></mstyle></mtd></mtr><mtr><mtd><mstyle scriptlevel="0" displaystyle="true"><mfrac><mrow><mi mathvariant="normal">d</mi><mi>R</mi></mrow><mrow><mrow><mtext> </mtext><mi mathvariant="normal">d</mi></mrow><mi>T</mi></mrow></mfrac></mstyle></mtd><mtd><mstyle scriptlevel="0" displaystyle="true"><mrow><mrow></mrow><mo>=</mo><mi>γ</mi><mi>I</mi></mrow></mstyle></mtd></mtr></mtable><annotation encoding="application/x-tex">\begin{aligned}\frac{\mathrm{d} S}{\mathrm{~d} T}&amp;=-N^{-1} \beta S I \\\frac{\mathrm{d} I}{\mathrm{~d} T}&amp;=N^{-1} \beta S I-\gamma I \\\frac{\mathrm{d} R}{\mathrm{~d} T}&amp;=\gamma I\end{aligned}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:7.0723199999999995em;vertical-align:-3.28616em;"></span><span class="mord"><span class="mtable"><span class="col-align-r"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:3.7861599999999997em;"><span style="top:-5.78616em;"><span class="pstrut" style="height:3.3714399999999998em;"></span><span class="mord"><span class="mord"><span class="mopen nulldelimiter"></span><span class="mfrac"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:1.37144em;"><span style="top:-2.314em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord"><span class="mspace nobreak"> </span><span class="mord mathrm">d</span></span><span class="mord mathnormal" style="margin-right:0.13889em;">T</span></span></span><span style="top:-3.23em;"><span class="pstrut" style="height:3em;"></span><span class="frac-line" style="border-bottom-width:0.04em;"></span></span><span style="top:-3.677em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord mathrm">d</span><span class="mord mathnormal" style="margin-right:0.05764em;">S</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.686em;"><span></span></span></span></span></span><span class="mclose nulldelimiter"></span></span></span></span><span style="top:-3.428719999999999em;"><span class="pstrut" style="height:3.3714399999999998em;"></span><span class="mord"><span class="mord"><span class="mopen nulldelimiter"></span><span class="mfrac"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:1.37144em;"><span style="top:-2.314em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord"><span class="mspace nobreak"> </span><span class="mord mathrm">d</span></span><span class="mord mathnormal" style="margin-right:0.13889em;">T</span></span></span><span style="top:-3.23em;"><span class="pstrut" style="height:3em;"></span><span class="frac-line" style="border-bottom-width:0.04em;"></span></span><span style="top:-3.677em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord mathrm">d</span><span class="mord mathnormal" style="margin-right:0.07847em;">I</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.686em;"><span></span></span></span></span></span><span class="mclose nulldelimiter"></span></span></span></span><span style="top:-1.0712799999999998em;"><span class="pstrut" style="height:3.3714399999999998em;"></span><span class="mord"><span class="mord"><span class="mopen nulldelimiter"></span><span class="mfrac"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:1.37144em;"><span style="top:-2.314em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord"><span class="mspace nobreak"> </span><span class="mord mathrm">d</span></span><span class="mord mathnormal" style="margin-right:0.13889em;">T</span></span></span><span style="top:-3.23em;"><span class="pstrut" style="height:3em;"></span><span class="frac-line" style="border-bottom-width:0.04em;"></span></span><span style="top:-3.677em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord mathrm">d</span><span class="mord mathnormal" style="margin-right:0.00773em;">R</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.686em;"><span></span></span></span></span></span><span class="mclose nulldelimiter"></span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:3.28616em;"><span></span></span></span></span></span><span class="col-align-l"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:3.7861599999999997em;"><span style="top:-5.78616em;"><span class="pstrut" style="height:3.3714399999999998em;"></span><span class="mord"><span class="mord"></span><span class="mspace" style="margin-right:0.2777777777777778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2777777777777778em;"></span><span class="mord">−</span><span class="mord"><span class="mord mathnormal" style="margin-right:0.10903em;">N</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.864108em;"><span style="top:-3.113em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">−</span><span class="mord mtight">1</span></span></span></span></span></span></span></span></span><span class="mord mathnormal" style="margin-right:0.05764em;">βS</span><span class="mord mathnormal" style="margin-right:0.07847em;">I</span></span></span><span style="top:-3.428719999999999em;"><span class="pstrut" style="height:3.3714399999999998em;"></span><span class="mord"><span class="mord"></span><span class="mspace" style="margin-right:0.2777777777777778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2777777777777778em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.10903em;">N</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.864108em;"><span style="top:-3.113em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">−</span><span class="mord mtight">1</span></span></span></span></span></span></span></span></span><span class="mord mathnormal" style="margin-right:0.05764em;">βS</span><span class="mord mathnormal" style="margin-right:0.07847em;">I</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span><span class="mord mathnormal" style="margin-right:0.05556em;">γ</span><span class="mord mathnormal" style="margin-right:0.07847em;">I</span></span></span><span style="top:-1.0712799999999998em;"><span class="pstrut" style="height:3.3714399999999998em;"></span><span class="mord"><span class="mord"></span><span class="mspace" style="margin-right:0.2777777777777778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2777777777777778em;"></span><span class="mord mathnormal" style="margin-right:0.05556em;">γ</span><span class="mord mathnormal" style="margin-right:0.07847em;">I</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:3.28616em;"><span></span></span></span></span></span></span></span></span></span></span></span></div></figure><p id="9328a868-2aa3-4340-80de-2017cb9da563" class="">其中总人口数 <style>@import url('https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.13.2/katex.min.css')</style><span data-token-index="0" contenteditable="false" class="notion-text-equation-token" style="user-select:all;-webkit-user-select:all;-moz-user-select:all"><span></span><span><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>N</mi><mo>=</mo><mi>S</mi><mo>+</mo><mi>I</mi><mo>+</mo><mi>R</mi></mrow><annotation encoding="application/x-tex">N = S + I + R</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.68333em;vertical-align:0em;"></span><span class="mord mathnormal" style="margin-right:0.10903em;">N</span><span class="mspace" style="margin-right:0.2777777777777778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2777777777777778em;"></span></span><span class="base"><span class="strut" style="height:0.76666em;vertical-align:-0.08333em;"></span><span class="mord mathnormal" style="margin-right:0.05764em;">S</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span></span><span class="base"><span class="strut" style="height:0.76666em;vertical-align:-0.08333em;"></span><span class="mord mathnormal" style="margin-right:0.07847em;">I</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span></span><span class="base"><span class="strut" style="height:0.68333em;vertical-align:0em;"></span><span class="mord mathnormal" style="margin-right:0.00773em;">R</span></span></span></span></span><span>﻿</span></span>，<style>@import url('https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.13.2/katex.min.css')</style><span data-token-index="0" contenteditable="false" class="notion-text-equation-token" style="user-select:all;-webkit-user-select:all;-moz-user-select:all"><span></span><span><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>T</mi></mrow><annotation encoding="application/x-tex">T</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.68333em;vertical-align:0em;"></span><span class="mord mathnormal" style="margin-right:0.13889em;">T</span></span></span></span></span><span>﻿</span></span> 是疫情开始到当前经过的时间，图 2 给出了一个常见的 SIR 模型模拟结果，其中绿、红、蓝色三条线分别代表易感人群、感染者人群以及治愈者的数量随时间的变化。从图中我们可以发现，在第 11 个单位时间的时候，感染者数量最多，感染速率和治愈速率相等，表示疫情已经进入平稳阶段。</p><figure id="ae881814-5f89-4665-93a9-84ee8fabc7c8" class="image"><a href="%E4%BB%8E%20SIR%20%E6%A8%A1%E5%9E%8B%E5%88%B0%E5%9F%BA%20a528b/Untitled%201.png"><img style="width:384px" src="%E4%BB%8E%20SIR%20%E6%A8%A1%E5%9E%8B%E5%88%B0%E5%9F%BA%20a528b/Untitled%201.png"/></a><figcaption>图 2. SIR 数量演化曲线 [<a href="https://peerj.com/articles/pchem-14/"><strong>The SIR dynamic model of infectious disease transmission and its analogy with chemical kinetics</strong></a>]</figcaption></figure><p id="245dbd50-a17f-4971-8e72-dfdf0f3bea8f" class="">结合实际的模拟实验和生活经验，可以发现这个简单模型并不能很好的对新冠病毒的爆发进行建模，首先它没有考虑重症造成的大量死亡会显著影响易感人群的数量。此外，在新冠爆发的初期，许多人是在死后才确诊，病毒的确诊滞后也会影响病毒的扩散。</p><h2 id="92bd49e0-b76e-4a62-8eb8-580d32e86316" class="">针对新冠肺炎进行调整的 SIR-F 模型</h2><p id="95cf0f39-c527-484c-89e8-27802bf2c7a0" class="">针对上述问题，LISPHILAR<strong> </strong>结合新冠肺炎病毒的传播规律以及真实的临床表现提出了 <a href="https://www.kaggle.com/code/lisphilar/covid-19-data-with-sir-model/notebook#SIR-to-SIR-F">SIR-F</a> 模型对新冠爆发进行模拟，他定义：</p><ul id="4d596341-f83a-467d-aae5-99809d0919a4" class="bulleted-list"><li style="list-style-type:disc"><style>@import url('https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.13.2/katex.min.css')</style><span data-token-index="0" contenteditable="false" class="notion-text-equation-token" style="user-select:all;-webkit-user-select:all;-moz-user-select:all"><span></span><span><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>S</mi></mrow><annotation encoding="application/x-tex">S</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.68333em;vertical-align:0em;"></span><span class="mord mathnormal" style="margin-right:0.05764em;">S</span></span></span></span></span><span>﻿</span></span>:   易感者 (= 总人口数 - 确诊人数)</li></ul><ul id="32f3a8f6-dd50-4d87-a094-e95d9848e4d4" class="bulleted-list"><li style="list-style-type:disc"><style>@import url('https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.13.2/katex.min.css')</style><span data-token-index="0" contenteditable="false" class="notion-text-equation-token" style="user-select:all;-webkit-user-select:all;-moz-user-select:all"><span></span><span><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mi>S</mi><mo>⋆</mo></msup></mrow><annotation encoding="application/x-tex">S^\star</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.688696em;vertical-align:0em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.05764em;">S</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.688696em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mbin mtight">⋆</span></span></span></span></span></span></span></span></span></span></span></span><span>﻿</span></span>:  新冠阳性但并没有被发现</li></ul><ul id="c849e10e-80aa-4bec-84c4-033f8ef522fe" class="bulleted-list"><li style="list-style-type:disc"><style>@import url('https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.13.2/katex.min.css')</style><span data-token-index="0" contenteditable="false" class="notion-text-equation-token" style="user-select:all;-webkit-user-select:all;-moz-user-select:all"><span></span><span><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>I</mi></mrow><annotation encoding="application/x-tex">I</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.68333em;vertical-align:0em;"></span><span class="mord mathnormal" style="margin-right:0.07847em;">I</span></span></span></span></span><span>﻿</span></span>:    新冠阳性且被发现</li></ul><ul id="5d4b5112-16ec-4b09-bba8-99babf686f58" class="bulleted-list"><li style="list-style-type:disc"><style>@import url('https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.13.2/katex.min.css')</style><span data-token-index="0" contenteditable="false" class="notion-text-equation-token" style="user-select:all;-webkit-user-select:all;-moz-user-select:all"><span></span><span><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>R</mi></mrow><annotation encoding="application/x-tex">R</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.68333em;vertical-align:0em;"></span><span class="mord mathnormal" style="margin-right:0.00773em;">R</span></span></span></span></span><span>﻿</span></span>:   新冠阳性但已经痊愈</li></ul><ul id="db9c72be-e5fd-44e6-9f60-a235f7bfebba" class="bulleted-list"><li style="list-style-type:disc"><style>@import url('https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.13.2/katex.min.css')</style><span data-token-index="0" contenteditable="false" class="notion-text-equation-token" style="user-select:all;-webkit-user-select:all;-moz-user-select:all"><span></span><span><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>F</mi></mrow><annotation encoding="application/x-tex">F</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.68333em;vertical-align:0em;"></span><span class="mord mathnormal" style="margin-right:0.13889em;">F</span></span></span></span></span><span>﻿</span></span>:   新冠阳性且重症 （Fatal）</li></ul><p id="facbdfc4-254f-48b3-8552-07ae8f312a4b" class="">其中， <style>@import url('https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.13.2/katex.min.css')</style><span data-token-index="0" contenteditable="false" class="notion-text-equation-token" style="user-select:all;-webkit-user-select:all;-moz-user-select:all"><span></span><span><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mi>S</mi><mo>∗</mo></msup></mrow><annotation encoding="application/x-tex">S^*</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.688696em;vertical-align:0em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.05764em;">S</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.688696em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mbin mtight">∗</span></span></span></span></span></span></span></span></span></span></span></span><span>﻿</span></span> 指的是那些携带病毒但并没有人（包括他们自己）知道的病例，他们可能在死亡后被确认为是新冠阳性，也有可能之后会被确认然后转为感染者。我们知道新冠确诊而死亡的病例数，但我们不知道没有确诊就死亡的病例数。本质上，<style>@import url('https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.13.2/katex.min.css')</style><span data-token-index="0" contenteditable="false" class="notion-text-equation-token" style="user-select:all;-webkit-user-select:all;-moz-user-select:all"><span></span><span><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mi>S</mi><mo>∗</mo></msup></mrow><annotation encoding="application/x-tex">S^*</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.688696em;vertical-align:0em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.05764em;">S</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.688696em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mbin mtight">∗</span></span></span></span></span></span></span></span></span></span></span></span><span>﻿</span></span> 作为 SIR-F 模型的一个辅助区间，将两种死亡情况分开，并插入一个属于 <style>@import url('https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.13.2/katex.min.css')</style><span data-token-index="0" contenteditable="false" class="notion-text-equation-token" style="user-select:all;-webkit-user-select:all;-moz-user-select:all"><span></span><span><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false">{</mo><mi>α</mi><mo separator="true">,</mo><mn>1</mn><mo>−</mo><mi>α</mi><mo stretchy="false">}</mo></mrow><annotation encoding="application/x-tex">\{\alpha, 1-\alpha\}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mopen">{</span><span class="mord mathnormal" style="margin-right:0.0037em;">α</span><span class="mpunct">,</span><span class="mspace" style="margin-right:0.16666666666666666em;"></span><span class="mord">1</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span></span><span class="base"><span class="strut" style="height:1em;vertical-align:-0.25em;"></span><span class="mord mathnormal" style="margin-right:0.0037em;">α</span><span class="mclose">}</span></span></span></span></span><span>﻿</span></span> 区间的概率因子。</p><p id="199317ad-358f-459a-951c-1375f8f761bb" class="">变量之间的关系：</p><p id="669e02de-5560-44cc-87cd-1839a3b7166c" class="">确诊数量 = <style>@import url('https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.13.2/katex.min.css')</style><span data-token-index="0" contenteditable="false" class="notion-text-equation-token" style="user-select:all;-webkit-user-select:all;-moz-user-select:all"><span></span><span><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>I</mi><mo>+</mo><mi>R</mi><mo>+</mo><mi>F</mi></mrow><annotation encoding="application/x-tex">I + R + F</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.76666em;vertical-align:-0.08333em;"></span><span class="mord mathnormal" style="margin-right:0.07847em;">I</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span></span><span class="base"><span class="strut" style="height:0.76666em;vertical-align:-0.08333em;"></span><span class="mord mathnormal" style="margin-right:0.00773em;">R</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span></span><span class="base"><span class="strut" style="height:0.68333em;vertical-align:0em;"></span><span class="mord mathnormal" style="margin-right:0.13889em;">F</span></span></span></span></span><span>﻿</span></span></p><p id="3e8fe32d-7294-41cb-ab9b-fd117427fb71" class="">痊愈数量 = <style>@import url('https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.13.2/katex.min.css')</style><span data-token-index="0" contenteditable="false" class="notion-text-equation-token" style="user-select:all;-webkit-user-select:all;-moz-user-select:all"><span></span><span><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>R</mi></mrow><annotation encoding="application/x-tex">R</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.68333em;vertical-align:0em;"></span><span class="mord mathnormal" style="margin-right:0.00773em;">R</span></span></span></span></span><span>﻿</span></span></p><p id="d8c25e41-e2ed-4e55-8c00-adfa83555dbb" class="">死亡人数 = <style>@import url('https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.13.2/katex.min.css')</style><span data-token-index="0" contenteditable="false" class="notion-text-equation-token" style="user-select:all;-webkit-user-select:all;-moz-user-select:all"><span></span><span><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>F</mi></mrow><annotation encoding="application/x-tex">F</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.68333em;vertical-align:0em;"></span><span class="mord mathnormal" style="margin-right:0.13889em;">F</span></span></span></span></span><span>﻿</span></span></p><figure id="0fa0de63-6bb1-4f43-8903-5a5536219c8a" class="equation"><style>@import url('https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.13.2/katex.min.css')</style><div class="equation-container"><span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mtable rowspacing="0.2500em" columnalign="right left right" columnspacing="0em 1em"><mtr><mtd><mstyle scriptlevel="0" displaystyle="true"><mrow><mi mathvariant="normal">S</mi><mo><mover><mo><mo>⟶</mo></mo><mrow><mi>β</mi><mi>I</mi></mrow></mover></mo></mrow></mstyle></mtd><mtd><mstyle scriptlevel="0" displaystyle="true"><mrow><mrow></mrow><msup><mi mathvariant="normal">S</mi><mo lspace="0em" rspace="0em">∗</mo></msup><mo><mover><mo><mo>⟶</mo></mo><msub><mi>α</mi><mn>1</mn></msub></mover></mo><mi mathvariant="normal">F</mi></mrow></mstyle></mtd></mtr><mtr><mtd><mstyle scriptlevel="0" displaystyle="true"><mrow></mrow></mstyle></mtd><mtd><mstyle scriptlevel="0" displaystyle="true"><mrow><mrow></mrow><msup><mi mathvariant="normal">S</mi><mo lspace="0em" rspace="0em">∗</mo></msup><mo><mover><mo><mo>⟶</mo></mo><mrow><mn>1</mn><mo>−</mo><msub><mi>α</mi><mn>1</mn></msub></mrow></mover></mo></mrow></mstyle></mtd><mtd><mstyle scriptlevel="0" displaystyle="true"><mrow><mi mathvariant="normal">I</mi><mo><mover><mo><mo>⟶</mo></mo><mi>γ</mi></mover></mo><mi mathvariant="normal">R</mi></mrow></mstyle></mtd></mtr><mtr><mtd><mstyle scriptlevel="0" displaystyle="true"><mrow></mrow></mstyle></mtd><mtd><mstyle scriptlevel="0" displaystyle="true"><mrow></mrow></mstyle></mtd><mtd><mstyle scriptlevel="0" displaystyle="true"><mrow><mi mathvariant="normal">I</mi><mo><mover><mo><mo>⟶</mo></mo><msub><mi>α</mi><mn>2</mn></msub></mover></mo><mi mathvariant="normal">F</mi></mrow></mstyle></mtd></mtr></mtable><annotation encoding="application/x-tex">\begin{aligned}
+\mathrm{S} \stackrel{\beta I}{\longrightarrow} &amp;\mathrm{S}^{*} \stackrel{\alpha_{1}}{\longrightarrow} \mathrm{F} \\
+ &amp; \mathrm{S}^{*} \stackrel{1-\alpha_{1}}{\longrightarrow}  &amp; \mathrm{I} \stackrel{\gamma}{\longrightarrow} \mathrm{R} \\
+ &amp;&amp; \mathrm{I} \stackrel{\alpha_{2}}{\longrightarrow} \mathrm{F}
+\end{aligned}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:5.720916000000001em;vertical-align:-2.6104580000000004em;"></span><span class="mord"><span class="mtable"><span class="col-align-r"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:3.1104580000000004em;"><span style="top:-5.110458em;"><span class="pstrut" style="height:3.344216em;"></span><span class="mord"><span class="mord mathrm">S</span><span class="mspace" style="margin-right:0.2777777777777778em;"></span><span class="mrel"><span class="mop op-limits"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:1.3442159999999999em;"><span style="top:-3em;"><span class="pstrut" style="height:3em;"></span><span><span class="mop">⟶</span></span></span><span style="top:-3.758108em;margin-left:0em;"><span class="pstrut" style="height:3em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight" style="margin-right:0.05278em;">β</span><span class="mord mathnormal mtight" style="margin-right:0.07847em;">I</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.011em;"><span></span></span></span></span></span></span></span></span><span style="top:-3.1772500000000004em;"><span class="pstrut" style="height:3.344216em;"></span><span class="mord"></span></span><span style="top:-1.3937579999999996em;"><span class="pstrut" style="height:3.344216em;"></span><span class="mord"></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:2.6104580000000004em;"><span></span></span></span></span></span><span class="col-align-l"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:3.1104580000000004em;"><span style="top:-5.110458em;"><span class="pstrut" style="height:3.344216em;"></span><span class="mord"><span class="mord"></span><span class="mord"><span class="mord mathrm">S</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.738696em;"><span style="top:-3.113em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">∗</span></span></span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2777777777777778em;"></span><span class="mrel"><span class="mop op-limits"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:1.1234920000000002em;"><span style="top:-3em;"><span class="pstrut" style="height:3em;"></span><span><span class="mop">⟶</span></span></span><span style="top:-3.7220999999999997em;margin-left:0em;"><span class="pstrut" style="height:3em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight"><span class="mord mathnormal mtight" style="margin-right:0.0037em;">α</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.31731428571428577em;"><span style="top:-2.357em;margin-left:-0.0037em;margin-right:0.07142857142857144em;"><span class="pstrut" style="height:2.5em;"></span><span class="sizing reset-size3 size1 mtight"><span class="mord mtight"><span class="mord mtight">1</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.143em;"><span></span></span></span></span></span></span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.011em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2777777777777778em;"></span><span class="mord mathrm">F</span></span></span><span style="top:-3.1772500000000004em;"><span class="pstrut" style="height:3.344216em;"></span><span class="mord"><span class="mord"></span><span class="mord"><span class="mord mathrm">S</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.738696em;"><span style="top:-3.113em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">∗</span></span></span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2777777777777778em;"></span><span class="mrel"><span class="mop op-limits"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:1.273208em;"><span style="top:-3em;"><span class="pstrut" style="height:3em;"></span><span><span class="mop">⟶</span></span></span><span style="top:-3.7220999999999997em;margin-left:0em;"><span class="pstrut" style="height:3em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">1</span><span class="mbin mtight">−</span><span class="mord mtight"><span class="mord mathnormal mtight" style="margin-right:0.0037em;">α</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.31731428571428577em;"><span style="top:-2.357em;margin-left:-0.0037em;margin-right:0.07142857142857144em;"><span class="pstrut" style="height:2.5em;"></span><span class="sizing reset-size3 size1 mtight"><span class="mord mtight"><span class="mord mtight">1</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.143em;"><span></span></span></span></span></span></span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.011em;"><span></span></span></span></span></span></span></span></span><span style="top:-1.3937579999999996em;"><span class="pstrut" style="height:3.344216em;"></span><span class="mord"><span class="mord"></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:2.6104580000000004em;"><span></span></span></span></span></span><span class="arraycolsep" style="width:1em;"></span><span class="col-align-r"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:1.1062420000000004em;"><span style="top:-3.1062420000000004em;"><span class="pstrut" style="height:3.273208em;"></span><span class="mord"><span class="mord mathrm">I</span><span class="mspace" style="margin-right:0.2777777777777778em;"></span><span class="mrel"><span class="mop op-limits"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:1.1595em;"><span style="top:-3em;"><span class="pstrut" style="height:3em;"></span><span><span class="mop">⟶</span></span></span><span style="top:-3.758108em;margin-left:0em;"><span class="pstrut" style="height:3em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mathnormal mtight" style="margin-right:0.05556em;">γ</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.011em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2777777777777778em;"></span><span class="mord mathrm">R</span></span></span><span style="top:-1.3227499999999996em;"><span class="pstrut" style="height:3.273208em;"></span><span class="mord"><span class="mord mathrm">I</span><span class="mspace" style="margin-right:0.2777777777777778em;"></span><span class="mrel"><span class="mop op-limits"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:1.1234920000000002em;"><span style="top:-3em;"><span class="pstrut" style="height:3em;"></span><span><span class="mop">⟶</span></span></span><span style="top:-3.7220999999999997em;margin-left:0em;"><span class="pstrut" style="height:3em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight"><span class="mord mathnormal mtight" style="margin-right:0.0037em;">α</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.31731428571428577em;"><span style="top:-2.357em;margin-left:-0.0037em;margin-right:0.07142857142857144em;"><span class="pstrut" style="height:2.5em;"></span><span class="sizing reset-size3 size1 mtight"><span class="mord mtight"><span class="mord mtight">2</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.143em;"><span></span></span></span></span></span></span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.011em;"><span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.2777777777777778em;"></span><span class="mord mathrm">F</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:2.6104580000000004em;"><span></span></span></span></span></span></span></span></span></span></span></span></div></figure><figure class="block-color-gray_background callout" style="white-space:pre-wrap;display:flex" id="26fa9be1-b6eb-4331-907f-c87c9b6d96f6"><div style="font-size:1.5em"><span class="icon">💡</span></div><div style="width:100%">式中，<style>@import url('https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.13.2/katex.min.css')</style><span data-token-index="0" contenteditable="false" class="notion-text-equation-token" style="user-select:all;-webkit-user-select:all;-moz-user-select:all"><span></span><span><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>α</mi><mn>1</mn></msub></mrow><annotation encoding="application/x-tex">\alpha_{1}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.58056em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.0037em;">α</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.30110799999999993em;"><span style="top:-2.5500000000000003em;margin-left:-0.0037em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">1</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span></span><span>﻿</span></span> 指 <style>@import url('https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.13.2/katex.min.css')</style><span data-token-index="0" contenteditable="false" class="notion-text-equation-token" style="user-select:all;-webkit-user-select:all;-moz-user-select:all"><span></span><span><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mi>S</mi><mo>∗</mo></msup></mrow><annotation encoding="application/x-tex">S^*</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.688696em;vertical-align:0em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.05764em;">S</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.688696em;"><span style="top:-3.063em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mbin mtight">∗</span></span></span></span></span></span></span></span></span></span></span></span><span>﻿</span></span> 的直接重症概率，<style>@import url('https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.13.2/katex.min.css')</style><span data-token-index="0" contenteditable="false" class="notion-text-equation-token" style="user-select:all;-webkit-user-select:all;-moz-user-select:all"><span></span><span><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>α</mi><mn>2</mn></msub></mrow><annotation encoding="application/x-tex">\alpha_{2}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.58056em;vertical-align:-0.15em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.0037em;">α</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.30110799999999993em;"><span style="top:-2.5500000000000003em;margin-left:-0.0037em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">2</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span></span></span></span></span><span>﻿</span></span> 指感染者的死亡率 [1 / 分钟]，<style>@import url('https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.13.2/katex.min.css')</style><span data-token-index="0" contenteditable="false" class="notion-text-equation-token" style="user-select:all;-webkit-user-select:all;-moz-user-select:all"><span></span><span><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>β</mi></mrow><annotation encoding="application/x-tex">\beta</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.8888799999999999em;vertical-align:-0.19444em;"></span><span class="mord mathnormal" style="margin-right:0.05278em;">β</span></span></span></span></span><span>﻿</span></span> 指有效接触比例 [1 / min]，<style>@import url('https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.13.2/katex.min.css')</style><span data-token-index="0" contenteditable="false" class="notion-text-equation-token" style="user-select:all;-webkit-user-select:all;-moz-user-select:all"><span></span><span><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>γ</mi></mrow><annotation encoding="application/x-tex">\gamma</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.625em;vertical-align:-0.19444em;"></span><span class="mord mathnormal" style="margin-right:0.05556em;">γ</span></span></span></span></span><span>﻿</span></span> 指治愈率 [1 / min]</div></figure><p id="6dfc75ec-a50d-409a-a89a-2ae7c2283f40" class="">其常微分方程的表达式就是： </p><figure id="447ff45b-b5ba-4430-ac4e-bf714d64afcf" class="equation"><style>@import url('https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.13.2/katex.min.css')</style><div class="equation-container"><span class="katex-display"><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><semantics><mtable rowspacing="0.2500em" columnalign="right left" columnspacing="0em"><mtr><mtd><mstyle scriptlevel="0" displaystyle="true"><mfrac><mrow><mi mathvariant="normal">d</mi><mi>S</mi></mrow><mrow><mrow><mtext> </mtext><mi mathvariant="normal">d</mi></mrow><mi>T</mi></mrow></mfrac></mstyle></mtd><mtd><mstyle scriptlevel="0" displaystyle="true"><mrow><mrow></mrow><mo>=</mo><mo>−</mo><msup><mi>N</mi><mrow><mo>−</mo><mn>1</mn></mrow></msup><mi>β</mi><mi>S</mi><mi>I</mi></mrow></mstyle></mtd></mtr><mtr><mtd><mstyle scriptlevel="0" displaystyle="true"><mfrac><mrow><mi mathvariant="normal">d</mi><mi>I</mi></mrow><mrow><mrow><mtext> </mtext><mi mathvariant="normal">d</mi></mrow><mi>T</mi></mrow></mfrac></mstyle></mtd><mtd><mstyle scriptlevel="0" displaystyle="true"><mrow><mrow></mrow><mo>=</mo><msup><mi>N</mi><mrow><mo>−</mo><mn>1</mn></mrow></msup><mrow><mo fence="true">(</mo><mn>1</mn><mo>−</mo><msub><mi>α</mi><mn>1</mn></msub><mo fence="true">)</mo></mrow><mi>β</mi><mi>S</mi><mi>I</mi><mo>−</mo><mrow><mo fence="true">(</mo><mi>γ</mi><mo>+</mo><msub><mi>α</mi><mn>2</mn></msub><mo fence="true">)</mo></mrow><mi>I</mi></mrow></mstyle></mtd></mtr><mtr><mtd><mstyle scriptlevel="0" displaystyle="true"><mfrac><mrow><mi mathvariant="normal">d</mi><mi>R</mi></mrow><mrow><mrow><mtext> </mtext><mi mathvariant="normal">d</mi></mrow><mi>T</mi></mrow></mfrac></mstyle></mtd><mtd><mstyle scriptlevel="0" displaystyle="true"><mrow><mrow></mrow><mo>=</mo><mi>γ</mi><mi>I</mi></mrow></mstyle></mtd></mtr><mtr><mtd><mstyle scriptlevel="0" displaystyle="true"><mfrac><mrow><mi mathvariant="normal">d</mi><mi>F</mi></mrow><mrow><mrow><mtext> </mtext><mi mathvariant="normal">d</mi></mrow><mi>T</mi></mrow></mfrac></mstyle></mtd><mtd><mstyle scriptlevel="0" displaystyle="true"><mrow><mrow></mrow><mo>=</mo><msup><mi>N</mi><mrow><mo>−</mo><mn>1</mn></mrow></msup><msub><mi>α</mi><mn>1</mn></msub><mi>β</mi><mi>S</mi><mi>I</mi><mo>+</mo><msub><mi>α</mi><mn>2</mn></msub><mi>I</mi></mrow></mstyle></mtd></mtr></mtable><annotation encoding="application/x-tex">\begin{aligned}\frac{\mathrm{d} S}{\mathrm{~d} T}&amp;=-N^{-1} \beta S I \\\frac{\mathrm{d} I}{\mathrm{~d} T}&amp;=N^{-1}\left(1-\alpha_{1}\right) \beta S I-\left(\gamma+\alpha_{2}\right) I \\\frac{\mathrm{d} R}{\mathrm{~d} T}&amp;=\gamma I \\\frac{\mathrm{d} F}{\mathrm{~d} T}&amp;=N^{-1} \alpha_{1} \beta S I+\alpha_{2} I\end{aligned}</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:9.429759999999998em;vertical-align:-4.464879999999999em;"></span><span class="mord"><span class="mtable"><span class="col-align-r"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:4.96488em;"><span style="top:-6.96488em;"><span class="pstrut" style="height:3.3714399999999998em;"></span><span class="mord"><span class="mord"><span class="mopen nulldelimiter"></span><span class="mfrac"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:1.37144em;"><span style="top:-2.314em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord"><span class="mspace nobreak"> </span><span class="mord mathrm">d</span></span><span class="mord mathnormal" style="margin-right:0.13889em;">T</span></span></span><span style="top:-3.23em;"><span class="pstrut" style="height:3em;"></span><span class="frac-line" style="border-bottom-width:0.04em;"></span></span><span style="top:-3.677em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord mathrm">d</span><span class="mord mathnormal" style="margin-right:0.05764em;">S</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.686em;"><span></span></span></span></span></span><span class="mclose nulldelimiter"></span></span></span></span><span style="top:-4.607439999999999em;"><span class="pstrut" style="height:3.3714399999999998em;"></span><span class="mord"><span class="mord"><span class="mopen nulldelimiter"></span><span class="mfrac"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:1.37144em;"><span style="top:-2.314em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord"><span class="mspace nobreak"> </span><span class="mord mathrm">d</span></span><span class="mord mathnormal" style="margin-right:0.13889em;">T</span></span></span><span style="top:-3.23em;"><span class="pstrut" style="height:3em;"></span><span class="frac-line" style="border-bottom-width:0.04em;"></span></span><span style="top:-3.677em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord mathrm">d</span><span class="mord mathnormal" style="margin-right:0.07847em;">I</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.686em;"><span></span></span></span></span></span><span class="mclose nulldelimiter"></span></span></span></span><span style="top:-2.25em;"><span class="pstrut" style="height:3.3714399999999998em;"></span><span class="mord"><span class="mord"><span class="mopen nulldelimiter"></span><span class="mfrac"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:1.37144em;"><span style="top:-2.314em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord"><span class="mspace nobreak"> </span><span class="mord mathrm">d</span></span><span class="mord mathnormal" style="margin-right:0.13889em;">T</span></span></span><span style="top:-3.23em;"><span class="pstrut" style="height:3em;"></span><span class="frac-line" style="border-bottom-width:0.04em;"></span></span><span style="top:-3.677em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord mathrm">d</span><span class="mord mathnormal" style="margin-right:0.00773em;">R</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.686em;"><span></span></span></span></span></span><span class="mclose nulldelimiter"></span></span></span></span><span style="top:0.1074399999999992em;"><span class="pstrut" style="height:3.3714399999999998em;"></span><span class="mord"><span class="mord"><span class="mopen nulldelimiter"></span><span class="mfrac"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:1.37144em;"><span style="top:-2.314em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord"><span class="mspace nobreak"> </span><span class="mord mathrm">d</span></span><span class="mord mathnormal" style="margin-right:0.13889em;">T</span></span></span><span style="top:-3.23em;"><span class="pstrut" style="height:3em;"></span><span class="frac-line" style="border-bottom-width:0.04em;"></span></span><span style="top:-3.677em;"><span class="pstrut" style="height:3em;"></span><span class="mord"><span class="mord mathrm">d</span><span class="mord mathnormal" style="margin-right:0.13889em;">F</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.686em;"><span></span></span></span></span></span><span class="mclose nulldelimiter"></span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:4.464879999999999em;"><span></span></span></span></span></span><span class="col-align-l"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:4.96488em;"><span style="top:-6.96488em;"><span class="pstrut" style="height:3.3714399999999998em;"></span><span class="mord"><span class="mord"></span><span class="mspace" style="margin-right:0.2777777777777778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2777777777777778em;"></span><span class="mord">−</span><span class="mord"><span class="mord mathnormal" style="margin-right:0.10903em;">N</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.864108em;"><span style="top:-3.113em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">−</span><span class="mord mtight">1</span></span></span></span></span></span></span></span></span><span class="mord mathnormal" style="margin-right:0.05764em;">βS</span><span class="mord mathnormal" style="margin-right:0.07847em;">I</span></span></span><span style="top:-4.607439999999999em;"><span class="pstrut" style="height:3.3714399999999998em;"></span><span class="mord"><span class="mord"></span><span class="mspace" style="margin-right:0.2777777777777778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2777777777777778em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.10903em;">N</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.864108em;"><span style="top:-3.113em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">−</span><span class="mord mtight">1</span></span></span></span></span></span></span></span></span><span class="mspace" style="margin-right:0.16666666666666666em;"></span><span class="minner"><span class="mopen delimcenter" style="top:0em;">(</span><span class="mord">1</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.0037em;">α</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.30110799999999993em;"><span style="top:-2.5500000000000003em;margin-left:-0.0037em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">1</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mclose delimcenter" style="top:0em;">)</span></span><span class="mspace" style="margin-right:0.16666666666666666em;"></span><span class="mord mathnormal" style="margin-right:0.05764em;">βS</span><span class="mord mathnormal" style="margin-right:0.07847em;">I</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span><span class="mbin">−</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span><span class="minner"><span class="mopen delimcenter" style="top:0em;">(</span><span class="mord mathnormal" style="margin-right:0.05556em;">γ</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.0037em;">α</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.30110799999999993em;"><span style="top:-2.5500000000000003em;margin-left:-0.0037em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">2</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mclose delimcenter" style="top:0em;">)</span></span><span class="mspace" style="margin-right:0.16666666666666666em;"></span><span class="mord mathnormal" style="margin-right:0.07847em;">I</span></span></span><span style="top:-2.25em;"><span class="pstrut" style="height:3.3714399999999998em;"></span><span class="mord"><span class="mord"></span><span class="mspace" style="margin-right:0.2777777777777778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2777777777777778em;"></span><span class="mord mathnormal" style="margin-right:0.05556em;">γ</span><span class="mord mathnormal" style="margin-right:0.07847em;">I</span></span></span><span style="top:0.1074399999999992em;"><span class="pstrut" style="height:3.3714399999999998em;"></span><span class="mord"><span class="mord"></span><span class="mspace" style="margin-right:0.2777777777777778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2777777777777778em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.10903em;">N</span><span class="msupsub"><span class="vlist-t"><span class="vlist-r"><span class="vlist" style="height:0.864108em;"><span style="top:-3.113em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">−</span><span class="mord mtight">1</span></span></span></span></span></span></span></span></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.0037em;">α</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.30110799999999993em;"><span style="top:-2.5500000000000003em;margin-left:-0.0037em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">1</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mord mathnormal" style="margin-right:0.05764em;">βS</span><span class="mord mathnormal" style="margin-right:0.07847em;">I</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span><span class="mord"><span class="mord mathnormal" style="margin-right:0.0037em;">α</span><span class="msupsub"><span class="vlist-t vlist-t2"><span class="vlist-r"><span class="vlist" style="height:0.30110799999999993em;"><span style="top:-2.5500000000000003em;margin-left:-0.0037em;margin-right:0.05em;"><span class="pstrut" style="height:2.7em;"></span><span class="sizing reset-size6 size3 mtight"><span class="mord mtight"><span class="mord mtight">2</span></span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:0.15em;"><span></span></span></span></span></span></span><span class="mord mathnormal" style="margin-right:0.07847em;">I</span></span></span></span><span class="vlist-s">​</span></span><span class="vlist-r"><span class="vlist" style="height:4.464879999999999em;"><span></span></span></span></span></span></span></span></span></span></span></span></div></figure><p id="8ce3f832-db17-46c0-acd6-f62f3e83b466" class="">其中，总人口 <style>@import url('https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.13.2/katex.min.css')</style><span data-token-index="0" contenteditable="false" class="notion-text-equation-token" style="user-select:all;-webkit-user-select:all;-moz-user-select:all"><span></span><span><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>N</mi><mo>=</mo><mi>S</mi><mo>+</mo><mi>I</mi><mo>+</mo><mi>R</mi><mo>+</mo><mi>F</mi></mrow><annotation encoding="application/x-tex">N=S+I+R+F</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.68333em;vertical-align:0em;"></span><span class="mord mathnormal" style="margin-right:0.10903em;">N</span><span class="mspace" style="margin-right:0.2777777777777778em;"></span><span class="mrel">=</span><span class="mspace" style="margin-right:0.2777777777777778em;"></span></span><span class="base"><span class="strut" style="height:0.76666em;vertical-align:-0.08333em;"></span><span class="mord mathnormal" style="margin-right:0.05764em;">S</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span></span><span class="base"><span class="strut" style="height:0.76666em;vertical-align:-0.08333em;"></span><span class="mord mathnormal" style="margin-right:0.07847em;">I</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span></span><span class="base"><span class="strut" style="height:0.76666em;vertical-align:-0.08333em;"></span><span class="mord mathnormal" style="margin-right:0.00773em;">R</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span><span class="mbin">+</span><span class="mspace" style="margin-right:0.2222222222222222em;"></span></span><span class="base"><span class="strut" style="height:0.68333em;vertical-align:0em;"></span><span class="mord mathnormal" style="margin-right:0.13889em;">F</span></span></span></span></span><span>﻿</span></span>，<style>@import url('https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.13.2/katex.min.css')</style><span data-token-index="0" contenteditable="false" class="notion-text-equation-token" style="user-select:all;-webkit-user-select:all;-moz-user-select:all"><span></span><span><span class="katex"><span class="katex-mathml"><math xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>T</mi></mrow><annotation encoding="application/x-tex">T</annotation></semantics></math></span><span class="katex-html" aria-hidden="true"><span class="base"><span class="strut" style="height:0.68333em;vertical-align:0em;"></span><span class="mord mathnormal" style="margin-right:0.13889em;">T</span></span></span></span></span><span>﻿</span></span> 是疫情开始到当前经过的时间。</p><p id="61c614d3-ce7e-448e-bc64-48d4ff191a4f" class="">除了上述模型，还有类似 SEIR 等 SIR 模型的变体，这里不再赘述。 SIR 系列模型能够用于估计疫情在不断时刻的态势以及最终的结局，评估疫情造成的影响，还可以指导管理者对疫情的传播进行干预以尽量降低真实的损失。此类模型目前还是存在许多局限性，该模型需要输入大量根据历史数据或者经验得出的参数，例如有效接触比例、阳性确诊比例等，其对人群的分类也比较简单，理想化的传播过程也难以表达现实环境对传播的影响，预测结果与真实数据会存在偏差。目前全世界的研究人员也在持续探索更加科学、准确的传染病传播建模方法。</p><h1 id="52081145-492f-4099-a5cf-3268f41ebdce" class="">受 SIR-F 模型启发的新冠肺炎传播模拟</h1><p id="41bc2916-85b3-47ad-8dfb-9a7dc3a1c674" class="">SIR-F 模型可以看作是一个宏观模型，用于抽象的描述传染病的传播过程，能够帮助分析者直接发现这些统计数据的趋势。相对的，基于智能体的建模方法（Agent-based Model）作为一种模拟方法，强调单个代理的行为，是一种更灵活、更细化的自下而上方法，可以捕获宏观模型无法捕获的细节。智能体可以用来代表活细胞，动物，个人，甚至整个组织或抽象实体。</p><p id="70df7fc9-3d80-4b11-854d-daa35d44bdbf" class="">我们可以使用基于智能体的建模方法对人们的活动、互动以及病毒在人们之间的传播进行模拟。假设分析者想预测特定地区的新冠肺炎病例数，可以创建一些智能体来代表该地区的居住者。同样，还可以模拟智能体（人）的行为，其中一些人出门都会戴口罩，而另一些人不会，一些人非常喜欢社交，而另一些人则喜欢宅家等等。然后我们可以模拟他们彼此之间的交互以及病毒传播相关的概率……</p><p id="fcc3dbc0-0f77-4456-a474-43317140b11b" class="">运行模拟后，分析者能够更好地了解整个系统，从中可以看到人群中的感染人数、治愈人数、传播率、是否达到群体免疫等。我们还可以看到疫情在整个区域的演化过程，从而帮助分析者找到防止疫情扩散的方法以及执行这些方法所带来的成果。这种基于智能体的建模方法的基石是从微观行为中理解归纳宏观现象的能力，在生物学、社会科学、交通管理和供应链管理等许多学科中都有应用。</p><h2 id="ad25aba1-a699-458f-9b4d-f848f0e959cd" class="">基于智能体的模拟框架 Mesa</h2><p id="d8d5dcd3-4c88-4789-9d3b-1b3c03c7c7bf" class=""><a href="https://mesa.readthedocs.io/en/latest/tutorials/adv_tutorial.html">Mesa</a> 是一个用于构建，分析和可视化基于智能体的模型的模块化开源框架，该框架基于 Python 3 开发,一方面能够助力研究系统的整体行为，还适合用于各种模型智能体的合作与竞争关系的研究。它允许用户使用内置的核心组件（如二维网格和智能体调度器）或定制的实现函数快速创建基于智能体的模型；使用基于浏览器的界面将模拟的结果可视化；并使用 Python 的数据分析工具分析其结果。在用户设计好了模拟规则运行模型之时，他会创建一个基于 <a href="https://www.tornadoweb.org/">Tornado</a> 的服务器程序，通过 WebSocket 实时传输模拟结果到前端进行可视化呈现。</p><h2 id="dfd49e2e-2b18-4420-9dc4-2c8cb052b34a" class="">模型配置</h2><p id="4c182360-2975-4480-894b-38b8abbc9497" class="">笔者将使用 Mesa 框架来模拟新冠肺炎在一个固定区域内的传播。假设有一个 70 x 50 的网格，网格内有 350 个格子用来代表空间位置，网格中还有能够在格子中自由移动的智能体，他们能够接触，接触的时候可能会传染病毒。</p><p id="16fe108f-57de-4897-8c08-bca577dbe7c7" class="">受到 SIR-F 模型的启发，这里对模型做了如下假设以及规则：</p><ul id="1491af09-fd4b-4cbb-a323-ab3ad4815eef" class="bulleted-list"><li style="list-style-type:disc">系统会初始化用户设置数量的智能体，这些智能体一开始会被分配到网格中的随机单元格，每个单元格可以存在多个智能体。</li></ul><ul id="f78ff970-8c0e-4214-a579-94400b5a091b" class="bulleted-list"><li style="list-style-type:disc">智能体在每一步中要么保持不动，要么移动到上下左右相邻的单元格。</li></ul><ul id="37784f49-7824-4c83-966d-6b6fa2d7c4e5" class="bulleted-list"><li style="list-style-type:disc">系统能够通过可设置参数控制所有智能体在整个模拟过程中戴口罩以及不带口罩的比例</li></ul><ul id="828bfb8c-f66e-4aef-8514-3f22a332dbdf" class="bulleted-list"><li style="list-style-type:disc">系统能够通过可设置参数控制智能体在被感染后罹患轻症或重症的比例，重症在感染后的每一天都会有一定概率死亡，死亡后的智能体将被移出网格，而轻症一定不会死亡。</li></ul><ul id="813498d5-e576-482a-8a03-bb167c016664" class="bulleted-list"><li style="list-style-type:disc">当易感者与另一个感染者在同一个格子中时，它们会根据戴口罩和未戴口罩相应的传染概率（可设置参数）判断是否被感染。</li></ul><ul id="7a30a343-65ee-406f-b0ed-932d1d85cd19" class="bulleted-list"><li style="list-style-type:disc">如果一个智能体被感染，它会在一定数量的模拟步骤（可设置参数）后治愈并获得免疫能力。</li></ul><ul id="4dfc4803-b2d8-4fd9-9ead-0af23343717c" class="bulleted-list"><li style="list-style-type:disc">经过一定数量的步骤（可设置参数）后智能体的免疫力消失，并且会再次变得易感。</li></ul><ul id="ef061491-0667-45f6-8959-75e9184c5c7e" class="bulleted-list"><li style="list-style-type:disc">为了使模型更加适配国内的情况，笔者还加入了隔离政策，如果隔离政策启用，那确诊病例将大概率不能在网格移动并且失去传染力（因为屏蔽了物理接触）。</li></ul><ul id="c315110d-4aea-4ed4-83ad-2f6c8828d776" class="bulleted-list"><li style="list-style-type:disc">此外，该模型还会简单的考虑境外输入感染者的情况，用户可以设置每一步出现境外输入传染者的概率，新的被感染智能体将被随机分配网格中。</li></ul><h2 id="5bf4e9fa-c64a-4446-a06b-11523e1d9c61" class="">视觉配置</h2><p id="7f38b244-4bc5-43cb-a355-8a4cfb123e1e" class="">如图 4 所示，网格被放置在系统的右上方，每个智能体都被表示为网格中的一个小圆。其中易感者着紫色，感染者着红色，治愈的和具有免疫能力的着绿色，重症患者将被移出该网格。系统右下方的图表将使用相应颜色的线条实时记录各类人群的总数。</p><figure id="e716ba7d-9a57-4136-b1b9-c1b9ab08f5a2" class="image"><a href="%E4%BB%8E%20SIR%20%E6%A8%A1%E5%9E%8B%E5%88%B0%E5%9F%BA%20a528b/Untitled%202.png"><img style="width:384px" src="%E4%BB%8E%20SIR%20%E6%A8%A1%E5%9E%8B%E5%88%B0%E5%9F%BA%20a528b/Untitled%202.png"/></a><figcaption>图 4. 模拟网格及多类智能体</figcaption></figure><h2 id="ded2d338-aa8f-4ec9-be8e-141adbff9948" class="">不同参数的模拟结果对比</h2><p id="0cba3b6e-4478-4b2c-adf8-68811d6df132" class="">通过设置不同的参数，可以模拟当前各个国家的疫情演化情况，下面两个案例都设置了同样的新冠感染概率以及初始传染者的比例，唯一不同的是是否施行隔离措施。</p><p id="41bf5c67-e73a-4f1b-9739-5b8b88e8dc1e" class="">例如「某个国家」没有施行隔离政策，并且完全允许其他国家的新冠阳性或未被检出的新冠阳性患者进入国家。这个国家的疫情传播趋势就会像图 4 一样，疫情将会在 190 天的时候基本没有新增阳性案例，但是在 304 天由于境外的输入，该国的疫情死灰复燃，在第 380 天也就是模拟的最后一天，死亡率在 10 % 左右。</p><figure id="68596f36-48c7-4b08-8ec2-fca9e9135cd6" class="image"><a href="%E4%BB%8E%20SIR%20%E6%A8%A1%E5%9E%8B%E5%88%B0%E5%9F%BA%20a528b/Untitled%203.png"><img style="width:624px" src="%E4%BB%8E%20SIR%20%E6%A8%A1%E5%9E%8B%E5%88%B0%E5%9F%BA%20a528b/Untitled%203.png"/></a><figcaption>图 4. 没有隔离政策的疫情演化结果</figcaption></figure><p id="f510dfed-4f53-4ef1-9418-fc488b0325c9" class="">而在另外的一些国家，例如中国，政府施行严格的隔离政策，并且严格限制入境的人数以及不允许感染者入境。这个国家的疫情传播趋势就会像图 5 一样，疫情将会在 90 天的时候基本没有新增阳性案例，在 280 天所有的治愈人群都重新变成了易感人群，在第 340 天的时候死亡率在 1 % 左右。</p><figure id="b0dfe470-b306-498b-bec9-18fc620d270d" class="image"><a href="%E4%BB%8E%20SIR%20%E6%A8%A1%E5%9E%8B%E5%88%B0%E5%9F%BA%20a528b/Untitled%204.png"><img style="width:624px" src="%E4%BB%8E%20SIR%20%E6%A8%A1%E5%9E%8B%E5%88%B0%E5%9F%BA%20a528b/Untitled%204.png"/></a><figcaption>图 5. 具有严格隔离政策的疫情演化结果</figcaption></figure><p id="e037de70-77c5-4091-a2f6-5741019251a9" class="">对图 4 和 图 5 ，差异是很明显的，这也说明了一些国家放任不管，企图用全民免疫来减少经济危机需要承担多么严重的后果。</p><h1 id="b8e2fe72-d2b8-4429-9ed6-9a8d7e20cd3c" class="">延伸阅读</h1><blockquote id="f133a4c9-288f-49ca-8989-e1cf61831420" class="">疫情传播可视化</blockquote><p id="1583c898-3888-47e0-999a-718256f772d4" class=""><strong><strong>EpiMob: Interactive Visual Analytics of Citywide Human Mobility Restrictions for Epidemic Control [</strong></strong><a href="https://arxiv.org/abs/2007.03180"><strong><strong>link</strong></strong></a><strong><strong>]</strong></strong></p><figure id="c30c4440-4328-442d-8e1f-a9a793991d0c" class="image"><a href="%E4%BB%8E%20SIR%20%E6%A8%A1%E5%9E%8B%E5%88%B0%E5%9F%BA%20a528b/Untitled%205.png"><img style="width:2212px" src="%E4%BB%8E%20SIR%20%E6%A8%A1%E5%9E%8B%E5%88%B0%E5%9F%BA%20a528b/Untitled%205.png"/></a><figcaption>图 6. EpiMob 系统概览</figcaption></figure><p id="535e3451-b1e2-4646-80a1-6451e5b0edfa" class="">EpiMob 系统能够交互式模拟在实施某种限制政策或政策组合（如区域封锁、远程办公、核酸筛查）的情况下，人类流动性和感染者数量的变化。使用者可以方便地指定流动限制政策应用的时空范围，相应的感染模拟情况能够被动态显示。</p><p id="50f2e836-afea-431d-b1bc-ffe4756a03f6" class="">
+</p><p id="2120a69e-721d-4f68-a443-99eb6ef81a0a" class=""><strong>McKinsey &amp; Company, Tracking the impact of COVID-19 [</strong><a href="https://www.mckinsey.com/featured-insights/coronavirus-leading-through-the-crisis/interactives"><strong><strong>link</strong></strong></a><strong><strong>]</strong></strong></p><p id="abea743f-e989-4bd9-8791-a4d9f83d6694" class="">麦肯锡针对新冠疫情追踪设计的一系列交互式可视化，旨在为如何在 COVID-19 危机中保护生命和维持生计等提供有效信息。</p><figure id="27585ace-14a2-4248-9e67-8103825ad030" class="image"><a href="%E4%BB%8E%20SIR%20%E6%A8%A1%E5%9E%8B%E5%88%B0%E5%9F%BA%20a528b/Untitled%206.png"><img style="width:2070px" src="%E4%BB%8E%20SIR%20%E6%A8%A1%E5%9E%8B%E5%88%B0%E5%9F%BA%20a528b/Untitled%206.png"/></a><figcaption>图 7. 新冠疫苗分布交互图表</figcaption></figure><p id="b437d49f-5df0-4797-b40b-90c9eee1e25a" class="">
+</p><blockquote id="6be47dd8-a0b2-4922-926b-a82846f07b5a" class="">疫情传播模拟方法</blockquote><p id="b23d23e8-f326-41a9-83d0-2222731a1c64" class=""><strong>How simulation modelling can help reduce the impact of COVID-19 [</strong><a href="https://www.tandfonline.com/doi/pdf/10.1080/17477778.2020.1751570"><strong>link</strong></a><strong>]</strong></p><p id="db32945b-5613-4fc8-9247-1c3dd3b19876" class="">文章 2.2 节详细论述了能够用于新冠疫情模拟的四种建模方法，并在第 3 章总结了这四种方法的优缺点。</p><p id="93844f5e-f367-45ee-9018-26294a3efc6e" class="">
+</p><p id="2e93de28-eb26-4349-9a24-30d8dbc59c85" class=""><strong><strong>Crowding and the shape of COVID-19 epidemics [</strong></strong><a href="https://www.nature.com/articles/s41591-020-1104-0.pdf"><strong><strong>link</strong></strong></a><strong><strong>]</strong></strong></p><p id="b8a6feb0-9e04-4339-99a7-f0611b329109" class="">文章作者发现在国家内部和国家之间，COVID-19病例的地理分布存在着明显的差异。他们发现，其中一些差异是由于人口拥挤的空间变化造成的。他们对比中国和意大利城市间COVID-19的详细病例计数数据，他们发现，拥挤程度较高的城市在第一波疫情发生后，流行时间更长，</p><figure id="dd00a70e-5b73-4a2d-8726-57806e70933b" class="image"><a href="%E4%BB%8E%20SIR%20%E6%A8%A1%E5%9E%8B%E5%88%B0%E5%9F%BA%20a528b/Untitled%207.png"><img style="width:1914px" src="%E4%BB%8E%20SIR%20%E6%A8%A1%E5%9E%8B%E5%88%B0%E5%9F%BA%20a528b/Untitled%207.png"/></a><figcaption>图 8. a, 四个城市的模拟感染数量归一化曲线，可以发现北京和上海（红色）的流行病峰值比温州和珠海（蓝色）的要小。b, 色度对应了每个网格单元（1公里×1公里）的估计居民数。c, 中国各县发病率曲线的香农指数与最终发病率之间的关系。</figcaption></figure><blockquote id="aea105d2-0251-4cb0-8049-29b6512a241f" class="">新冠病毒变异情况</blockquote><p id="dd2707e6-c439-4544-b453-9b8053f366ac" class=""><strong><strong>Genomic epidemiology of SARS-CoV-2 with global subsampling [</strong></strong><a href="https://nextstrain.org/ncov/gisaid/global"><strong><strong>link</strong></strong></a><strong><strong>]</strong></strong></p><p id="f4a1bc7c-db9c-40b7-8f41-714efe4cee21" class="">这是一个利用病原体基因组数据为科研以及公共卫生提供辅助的项目，能够了解当前新冠病毒的变异情况以及各种变体的衍生子类出现的时间以及占比。</p><figure id="f8f41eea-70b5-430a-add5-5b8988bf1c7b" class="image"><a href="%E4%BB%8E%20SIR%20%E6%A8%A1%E5%9E%8B%E5%88%B0%E5%9F%BA%20a528b/%E6%88%AA%E5%B1%8F2022-03-24_%E4%B8%8A%E5%8D%889.37.11.png"><img style="width:2140px" src="%E4%BB%8E%20SIR%20%E6%A8%A1%E5%9E%8B%E5%88%B0%E5%9F%BA%20a528b/%E6%88%AA%E5%B1%8F2022-03-24_%E4%B8%8A%E5%8D%889.37.11.png"/></a></figure><p id="9516533f-0f50-4cdc-92c9-8c878d69d91d" class="">
+</p><h1 id="ff140b19-4725-4c8a-a560-a5b313b7fdbd" class="">写在最后</h1><p id="a64f5a16-cf77-4648-ba85-500cfe6eca21" class="">笔者很遗憾国内新冠刚开始爆发的时候没有和家人在一起，当时原本计划回家的日子，国内的疫情已经非常严重，家里的小区也已经封锁，整个中国人心惶惶。心中按捺不住回家的冲动，却在父母的强烈阻止下没能如愿。虽然父母每天都发小心让我安心，但实际上接下来的生活却过的十分焦虑，每天都会无数次的打开新冠确诊统计网页，在心里默念明天别再涨了，在最后衷心的希望疫情早点结束，完成自己的旅行清单，每天都能见到想见的人。最后，以一首歌作为结尾。</p><p id="1c4ed8ee-4a09-4b0f-9f25-2be4ca0a4abe" class="">《<a href="https://music.163.com/#/song?id=1930249024&amp;uct=%2B3AYEaImlQgBNNnn3TKJSA%3D%3D&amp;app_version=8.7.11&amp;sc=wmv">新冠，请滚出这个地球</a>》</p><h1 id="e0b3cdf8-9895-4090-8d53-62e518653edd" class="">参考资料</h1><p id="ca7252c3-82ac-4044-a6b6-f5e9a25ea0a7" class=""><strong><strong>Bassel Karami, </strong></strong><a href="https://towardsdatascience.com/intro-to-agent-based-modeling-3eea6a070b72"><strong><strong>Intro to Agent Based Modeling</strong></strong></a></p><p id="d0901b27-efb1-45e1-89e6-54439e7c5664" class=""><strong><strong>Bassel Karami, </strong></strong><a href="https://towardsdatascience.com/agent-based-model-visualization-cb5648db51f4"><strong><strong>Agent-Based Model Visualization</strong></strong></a></p><p id="f7b78eca-1d5f-4528-9a76-befac3947364" class=""><strong>LISPHILAR, </strong><a href="https://www.kaggle.com/code/lisphilar/covid-19-data-with-sir-model/notebook"><strong>COVID-19 data with SIR model</strong></a></p><p id="7202fe52-3372-43a1-8345-6faf5262cd0c" class="">
+</p><blockquote id="c9a3b20f-4e22-4ebe-ae38-0c8a765f3af5" class="">本文使用 <a href="https://www.notion.so">Notion</a> 编辑</blockquote><p id="554240d5-a475-46e9-af07-122447a6f0fb" class="">
+</p></div></article></body></html>
